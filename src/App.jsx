@@ -12,12 +12,14 @@ function App() {
   return (
     <div className="App">
       <Navbarnew />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/quiz" element={<NewQuizPage />} />
-      </Routes>
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/quiz" element={<NewQuizPage />} />
+        </Routes>
+      </main>
       <Footer />
     </div>
   );

@@ -1,13 +1,54 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import gsap from 'gsap';
+import { motion } from 'framer-motion';
+import { CheckCircle, XCircle, Clock, Trophy } from 'lucide-react';
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 
 export const NewQuizPage = () => {
 
-  const ref = useRef();
   const [questions, setQuestions] = useState([]);
   const [score, setScore] = useState(0);
   const [count, setCount] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [answered, setAnswered] = useState(false);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+
+  useEffect(() => {
+    if (count >= questions.length || answered) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 5) {
+          setShowTimeWarning(true);
+        }
+        if (prev <= 1) {
+          setAnswered(true);
+          setTimeout(() => {
+            const newQuestions = [...questions];
+            newQuestions.splice(count, 1);
+            setQuestions(newQuestions);
+            setCount(count + 1);
+          }, 1500);
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [count, questions, answered]);
+
+  useEffect(() => {
+    // Reset timer when moving to next question
+    setTimeLeft(30);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    setAnswered(false);
+    setShowTimeWarning(false);
+  }, [count]);
 
   useEffect(() => {
     const data = [
@@ -166,61 +207,254 @@ export const NewQuizPage = () => {
 }, [])
 
   const handleAnswer = (index, answer, question) => {
-    // Check if the selected answer is correct:
+    if (answered) return;
+    
     const isCorrect = answer === question.correctAnswer;
     
-    // Update state or perform other actions based on the result:
-    // - You might want to track scores, display feedback, or navigate to the next question
-  
-    // Example implementation for demonstration:
-    setScore((prevScore) => prevScore + (isCorrect ? 1 : 0)); // Update score (assuming you have a score state)
-    console.log(isCorrect ? 'Correct!' : 'Incorrect.'); // Display feedback
-  
-    // Show other questions from db:
-    const newQuestions = [...questions]; // Create a copy of the questions array
-    newQuestions.splice(index, 1); // Remove the answered question
-    setQuestions(newQuestions); // Update the questions state
-    setCount(count+1)
-    gsap.fromTo(".quiz",{opacity: 0, scale: 0.5}, {
-      opacity: 1,
-      scale: 1,
-      transform: "translate(0%, 0%)",
-      duration: 0.7,
-    })
-  };
-  
-  return (
-    <div className="container mx-auto px-4 overflow-hidden pb-32">
+    setSelectedAnswer(answer);
+    setShowFeedback(true);
+    setAnswered(true);
+    
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + 1);
+    }
+
+    setTimeout(() => {
+      const newQuestions = [...questions];
+      newQuestions.splice(index, 1);
+      setQuestions(newQuestions);
+      setCount(count + 1);
       
-    <div ref={ref} className="score text-2xl font-bold mb-4 text-center mt-4">Score: {score}</div>
-
-      <div className="quiz mt-20 flex flex-wrap items-center justify-center">
-        {count < questions.length ? (
-          <div className="p-5 md:p-10 border border-black w-full md:w-1/2 ">
-            <p className=" mb-4 text-center text-xl">
-              Question {count + 1}: {questions[count].que}
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center mx-4">
-              {questions[count].answer.map((answer, answerIndex) => (
-                <button
-                  key={answerIndex}
-                  type="button"
-                  className={`w-96 px-4 mt-2 py-2 text-left bg-gray-200 hover:bg-gray-300 rounded-md mr-4 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  onClick={() => handleAnswer(count, answer, questions[count])}
-                >
-                  {answer}
-                </button>
-              ))}
+      gsap.fromTo(".quiz", {
+        opacity: 0,
+        scale: 0.5
+      }, {
+        opacity: 1,
+        scale: 1,
+        transform: "translate(0%, 0%)",
+        duration: 0.7,
+      });
+    }, 2500);
+  };
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pb-32">
+      <div className="container mx-auto px-4 py-8">
+        
+        {/* Header Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+        >
+          <div className="bg-white rounded-lg shadow-lg p-6 flex items-center gap-4">
+            <Trophy className="text-yellow-500" size={32} />
+            <div>
+              <p className="text-gray-600 text-sm">Score</p>
+              <p className="text-3xl font-bold text-gray-900">{score}</p>
             </div>
           </div>
-        ) : (
-          <div className="result p-5 md:p-10 border border-black w-full md:w-1/2">
-            <p className="text-3xl text-center font-bold leading-none mb-8">You scored <br/>{score}/{questions.length}!</p>
-            
+          
+          <div className={`bg-white rounded-lg shadow-lg p-6 flex items-center gap-4 transition-all ${showTimeWarning ? 'ring-2 ring-red-500 bg-red-50' : ''}`}>
+            <Clock className={showTimeWarning ? "text-red-500 animate-pulse" : "text-blue-500"} size={32} />
+            <div>
+              <p className="text-gray-600 text-sm">Time Left</p>
+              <motion.p 
+                key={timeLeft}
+                animate={{ scale: [1.2, 1] }}
+                className={`text-3xl font-bold ${showTimeWarning ? 'text-red-600' : 'text-gray-900'}`}
+              >
+                {timeLeft}s
+              </motion.p>
+            </div>
           </div>
-        )
-      }
+          
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <p className="text-gray-600 text-sm mb-2">Progress</p>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <motion.div
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((count) / questions.length) * 100 || 0}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+            <p className="text-sm text-gray-600 mt-2">{count}/{questions.length}</p>
+          </div>
+        </motion.div>
+
+        {/* Quiz Container */}
+        <motion.div className="quiz max-w-2xl mx-auto">
+          {count < questions.length ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-gradient-to-r border-blue-200"
+            >
+              {/* Question */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mb-8"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold">
+                    {count + 1}
+                  </span>
+                  <p className="text-gray-600 text-sm">Question {count + 1} of {questions.length}</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mb-8">
+                  {questions[count]?.que}
+                </p>
+              </motion.div>
+
+              {/* Answers */}
+              <motion.div className="space-y-4">
+                {questions[count]?.answer.map((answer, answerIndex) => {
+                  const isCorrect = answer === questions[count].correctAnswer;
+                  const isSelected = answer === selectedAnswer;
+                  
+                  let bgColor = 'bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-300 hover:from-blue-50 hover:to-blue-100 hover:border-blue-400';
+                  
+                  if (showFeedback && isSelected) {
+                    bgColor = isCorrect ? 'bg-gradient-to-r from-green-100 to-green-200 border-2 border-green-500' : 'bg-gradient-to-r from-red-100 to-red-200 border-2 border-red-500';
+                  } else if (showFeedback && isCorrect && !isSelected) {
+                    bgColor = 'bg-gradient-to-r from-green-100 to-green-200 border-2 border-green-500';
+                  }
+
+                  return (
+                    <motion.button
+                      key={answerIndex}
+                      whileHover={!answered ? { scale: 1.02, x: 8 } : {}}
+                      whileTap={!answered ? { scale: 0.98 } : {}}
+                      onClick={() => !answered && handleAnswer(count, answer, questions[count])}
+                      disabled={answered}
+                      className={`w-full px-8 py-6 text-left rounded-xl font-bold text-lg transition-all flex items-center justify-between ${bgColor} ${answered ? 'cursor-not-allowed' : 'cursor-pointer'} shadow-md hover:shadow-lg`}
+                    >
+                      <span className="text-gray-900 leading-relaxed">{answer}</span>
+                      {showFeedback && isSelected && (
+                        isCorrect ? (
+                          <CheckCircle className="text-green-600" size={24} />
+                        ) : (
+                          <XCircle className="text-red-600" size={24} />
+                        )
+                      )}
+                      {showFeedback && isCorrect && !isSelected && (
+                        <CheckCircle className="text-green-600" size={24} />
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+
+              {/* Feedback Message */}
+              {showFeedback && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mt-8 p-6 rounded-lg text-center font-bold text-lg ${
+                    selectedAnswer === questions[count].correctAnswer
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {selectedAnswer === questions[count].correctAnswer
+                    ? '✓ Correct Answer! Moving to next question...'
+                    : `✗ Wrong! Correct answer: ${questions[count].correctAnswer}`}
+                </motion.div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-2xl shadow-2xl p-12 text-center"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2 }}
+                className="inline-block mb-8"
+              >
+                <Trophy className="text-yellow-500" size={80} />
+              </motion.div>
+              
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Quiz Complete!</h2>
+              
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="mb-8 p-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl"
+              >
+                <p className="text-6xl font-bold text-white mb-2">
+                  {score}/{questions.length}
+                </p>
+                <p className="text-white text-xl">
+                  Score: {((score / questions.length) * 100).toFixed(1)}%
+                </p>
+              </motion.div>
+
+              {/* Results Chart */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-gray-50 p-4 rounded-lg"
+                >
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Correct', value: score, fill: '#10b981' },
+                          { name: 'Incorrect', value: questions.length - score, fill: '#ef4444' }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        <Cell fill="#10b981" />
+                        <Cell fill="#ef4444" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-gray-50 p-4 rounded-lg flex flex-col justify-center items-center gap-4"
+                >
+                  <div className="text-center">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="text-green-500" size={28} />
+                      <p className="text-gray-600">Correct Answers</p>
+                    </div>
+                    <p className="text-3xl font-bold text-green-600">{score}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center gap-3 mb-2">
+                      <XCircle className="text-red-500" size={28} />
+                      <p className="text-gray-600">Incorrect Answers</p>
+                    </div>
+                    <p className="text-3xl font-bold text-red-600">{questions.length - score}</p>
+                  </div>
+                </motion.div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.reload()}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+              >
+                Retake Quiz
+              </motion.button>
+            </motion.div>
+          )}
+        </motion.div>
       </div>
     </div>
   );
