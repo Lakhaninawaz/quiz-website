@@ -117,14 +117,14 @@ export const Register = () => {
               Full Name
             </label>
             <div className="relative">
-              <User className="absolute left-4 top-3.5 text-gray-400" size={20} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               <input
                 type="text"
                 name="name"
                 value={user.name}
                 onChange={handleChange}
                 placeholder="Enter your full name"
-                className={`input-field pl-12 ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 pl-12 rounded-lg border-2 transition-colors ${errors.name ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'} focus:outline-none`}
               />
             </div>
             {errors.name && (
@@ -149,14 +149,14 @@ export const Register = () => {
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-3.5 text-gray-400" size={20} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               <input
                 type="email"
                 name="email"
                 value={user.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                className={`input-field pl-12 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 pl-12 rounded-lg border-2 transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'} focus:outline-none`}
               />
             </div>
             {errors.email && (
@@ -181,19 +181,19 @@ export const Register = () => {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-3.5 text-gray-400" size={20} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={user.password}
                 onChange={handleChange}
                 placeholder="Create a password"
-                className={`input-field pl-12 pr-12 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 pl-12 pr-12 rounded-lg border-2 transition-colors ${errors.password ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'} focus:outline-none`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -244,24 +244,17 @@ export const Register = () => {
               Confirm Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-3.5 text-gray-400" size={20} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="reEnterPassword"
                 value={user.reEnterPassword}
                 onChange={handleChange}
                 placeholder="Confirm your password"
-                className={`input-field pl-12 pr-12 ${errors.reEnterPassword ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 pl-12 pr-24 rounded-lg border-2 transition-colors ${errors.reEnterPassword ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'} focus:outline-none`}
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
-              >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
               {user.reEnterPassword && (
-                <div className="absolute right-12 top-3.5">
+                <div className="absolute right-14 top-1/2 -translate-y-1/2">
                   {user.password === user.reEnterPassword ? (
                     <Check className="text-green-500" size={20} />
                   ) : (
@@ -269,6 +262,13 @@ export const Register = () => {
                   )}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
 
             {errors.reEnterPassword && (
